@@ -1,0 +1,209 @@
+package nz.ac.wgtn.swen301.assignment1;
+
+import nz.ac.wgtn.swen301.studentdb.*;
+import java.sql.*;
+import java.util.*;
+
+/**
+ * A student managers providing basic CRUD operations for instances of Student, and a read operation for instances of Degree.
+ * @author jens dietrich
+ */
+public class StudentManager {
+	// Credit: https://www.tutorialspoint.com/jdbc/jdbc-sample-code.htm
+	
+    // DO NOT REMOVE THE FOLLOWING -- THIS WILL ENSURE THAT THE DATABASE IS AVAILABLE
+    // AND THE APPLICATION CAN CONNECT TO IT WITH JDBC
+    static {
+        StudentDB.init();
+    }
+    // DO NOT REMOVE BLOCK ENDS HERE
+
+    // Database Credentials
+	private final static String JDBC_URL = "jdbc:derby:memory:studentdb";
+    private static Connection conn = null;
+    private static Statement stmt = null;
+    
+    //Database in map format
+	private static Map<String, Degree> MAP_DEGREES = new HashMap<String, Degree>();
+    private static Map<String, Student> MAP_STUDENTS = new HashMap<String, Student>();
+    
+    // THE FOLLOWING METHODS MUST IMPLEMENTED :
+    /**
+     * Return a student instance with values from the row with the respective id in the database.
+     * If an instance with this id already exists, return the existing instance and do not create a second one.
+     * @param id
+     * @return
+     * @throws NoSuchRecordException if no record with such an id exists in the database
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readStudent (followed by optional numbers if multiple tests are used)
+     */
+    public static Student readStudent(String ID) throws NoSuchRecordException {
+        return MAP_STUDENTS.get(ID);
+    }
+
+    /**
+     * Return a degree instance with values from the row with the respective id in the database.
+     * If an instance with this id already exists, return the existing instance and do not create a second one.
+     * @param id
+     * @return
+     * @throws NoSuchRecordException if no record with such an id exists in the database
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_readDegree (followed by optional numbers if multiple tests are used)
+     */
+    public static Degree readDegree(String id) throws NoSuchRecordException {
+        return null;
+    }
+
+    /**
+     * Delete a student instance from the database.
+     * I.e., after this, trying to read a student with this id will result in a NoSuchRecordException.
+     * @param student
+     * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_delete
+     */
+    public static void delete(Student student) throws NoSuchRecordException {}
+
+    /**
+     * Update (synchronize) a student instance with the database.
+     * The id will not be changed, but the values for first names or degree in the database might be changed by this operation.
+     * After executing this command, the attribute values of the object and the respective database value are consistent.
+     * Note that names and first names can only be max 1o characters long.
+     * There is no special handling required to enforce this, just ensure that tests only use values with < 10 characters.
+     * @param student
+     * @throws NoSuchRecordException if no record corresponding to this student instance exists in the database
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_update (followed by optional numbers if multiple tests are used)
+     */
+    public static void update(Student student) throws NoSuchRecordException {}
+
+
+    /**
+     * Create a new student with the values provided, and save it to the database.
+     * The student must have a new id that is not been used by any other Student instance or STUDENTS record (row).
+     * Note that names and first names can only be max 1o characters long.
+     * There is no special handling required to enforce this, just ensure that tests only use values with < 10 characters.
+     * @param name
+     * @param firstName
+     * @param degree
+     * @return a freshly created student instance
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_createStudent (followed by optional numbers if multiple tests are used)
+     */
+    public static Student createStudent(String name,String firstName,Degree degree) {
+        return null;
+    }
+
+    /**
+     * Get all student ids currently being used in the database.
+     * @return
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_getAllStudentIds (followed by optional numbers if multiple tests are used)
+     */
+    public static Collection<String> getAllStudentIds() {
+        return null;
+    }
+
+    /**
+     * Get all degree ids currently being used in the database.
+     * @return
+     * This functionality is to be tested in test.nz.ac.wgtn.swen301.assignment1.TestStudentManager::test_getAllDegreeIds (followed by optional numbers if multiple tests are used)
+     */
+    public static Iterable<String> getAllDegreeIds() {
+        return null;
+    }
+    
+    /*===============[HELPER METHODS]===============*/
+    
+    /**
+     * Open database
+     */
+    public static void openConnection() {
+    	try {
+    		//Connecting
+    		System.out.println("Connecting to database...");
+    		conn = DriverManager.getConnection(JDBC_URL);
+    		
+    		//Prep statement
+    		Statement stmt = conn.createStatement();
+    		
+    	} catch(SQLException se) {
+    		System.out.println("SQLException: StudentManager > openConnection()");
+    		se.printStackTrace();
+    	} catch(Exception e) {
+    		System.out.println("Exception: StudentManager > openConnection()");
+    		e.printStackTrace();
+    	}
+    	
+    	retrieveData();
+    }
+    
+    /**
+     * Prep database this class
+     */
+    public static void retrieveData() {
+    	System.out.println("Retrieving Data");
+    	
+    	//FIRST: Degrees
+    	try {
+    		stmt = conn.createStatement();
+    		String sql = "SELECT id, name FROM Degrees";
+    		ResultSet rs = stmt.executeQuery(sql);
+    		
+    		while(rs.next()) {
+    			String id = rs.getString("id");
+    			String name = rs.getString("name");
+    			
+    			Degree d = new Degree(id, name);
+    			MAP_DEGREES.put(id, d);
+    		}
+    	} catch (SQLException e) {
+    		System.out.println("Failure to prep MAP_DEGREES");
+    		e.printStackTrace();
+    	}
+    	System.out.println("Degree database successfully accessed and utilized");
+    	
+    	//SECOND: Students
+    	try {
+    		stmt = conn.createStatement();
+	    	String sql = "SELECT id, first_name, name, degree FROM Students";
+	    	ResultSet rs = stmt.executeQuery(sql);
+	    	
+	    	while(rs.next()) {
+	    		//Getting data
+	    		String id = rs.getString("id");
+	    		String firstName = rs.getString("first_name");
+	    		String name = rs.getString("name");
+	    		
+	    		String degreeID = rs.getString("degree");
+	    		Degree degree = MAP_DEGREES.get(degreeID);
+	    		
+	    		//Constructing instance of student
+	    		Student s = new Student(id, firstName, name, degree);
+	    		
+	    		MAP_STUDENTS.put(id, s);
+	    	}
+		} catch (SQLException e) {
+    		System.out.println("Failure to prep MAP_STUDENTS");
+			e.printStackTrace();
+		}
+    	System.out.println("Student database successfully accessed and utilized");
+    	
+    	// Print sense of accomplishment
+    	System.out.println("Data Retrieval complete!");
+    }
+    
+    /**
+     * Close database
+     */
+    public static void closeConnection() {
+    	try {
+    		System.out.println("Disconnecting from database...");
+            if(conn!=null) {
+                conn.close();
+        		System.out.println("Connection successfully closed!");
+            } else {
+            	System.out.println("No established connection");
+            }
+         } catch(SQLException se) {
+        	 System.out.println("SQLException: StudentManager > closeConnection()");
+            se.printStackTrace();
+         }
+    }
+
+
+}

@@ -1,0 +1,96 @@
+package test.nz.ac.wgtn.swen301.assignment1;
+
+import nz.ac.wgtn.swen301.assignment1.StudentManager;
+import nz.ac.wgtn.swen301.studentdb.Degree;
+import nz.ac.wgtn.swen301.studentdb.NoSuchRecordException;
+import nz.ac.wgtn.swen301.studentdb.Student;
+import nz.ac.wgtn.swen301.studentdb.StudentDB;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.AfterClass;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+
+
+public class TestStudentManager {
+    // DO NOT REMOVE THE FOLLOWING -- THIS WILL ENSURE THAT THE DATABASE IS AVAILABLE
+    // AND IN ITS INITIAL STATE BEFORE EACH TEST RUNS
+    @Before
+    public void init() {
+        StudentDB.init();
+    }
+    // DO NOT REMOVE BLOCK ENDS HERE
+    
+    // Open and Close connections.		credit: glimpse of the code from a buddy of mine, it sounded like a cool idea.
+    @BeforeClass
+    public static void openConnection() { StudentManager.openConnection(); }
+    
+    @AfterClass
+    public static void closeConnection() { StudentManager.closeConnection(); }
+    
+    // TESTS
+    @Test
+    public void test_readStudent() throws Exception {
+    	String id = "id" + ((int) ((Math.random() * (9999 - 0)) + 0));
+    	
+    	//Test Successful case
+        Student student = StudentManager.readStudent(id);
+        assertNotNull(student);
+        assertTrue(student.getId().equals(id));
+        
+        //Test Unsuccessful case
+        boolean errorThrown = false;
+        
+        try { StudentManager.readStudent("coughing sounds"); } 
+        catch (Exception e) { if(e.getClass().equals(NoSuchRecordException.class)) errorThrown = true; }
+        
+        assertTrue(errorThrown);
+    }
+    
+    @Test
+    public void test_readDegree() throws Exception {
+    	String id = "deg" + ((int) ((Math.random() * (9 - 0)) + 0));
+    	
+    	//Test Successful case
+        Degree degree = StudentManager.readDegree(id);
+        assertNotNull(degree);
+        assertTrue(degree.getId().equals(id));
+        
+        //Test Unsuccessful case
+        boolean errorThrown = false;
+        
+        try { StudentManager.readDegree("coughing sounds"); } 
+        catch (Exception e) { if(e.getClass().equals(NoSuchRecordException.class)) errorThrown = true; }
+        
+        assertTrue(errorThrown);
+    }
+    
+    @Test
+    public void test_delete() throws Exception {
+    	String id = "id" + ((int) ((Math.random() * (9999 - 0)) + 0));
+    	
+    	//Test Successful case
+        Student student = StudentManager.readStudent(id);
+        StudentManager.delete(student);
+
+        boolean errorThrown = false;
+        try { StudentManager.readStudent(id); } 
+        catch (Exception e) { if(e.getClass().equals(NoSuchRecordException.class)) errorThrown = true; }
+        assertTrue(errorThrown);
+        
+        
+        //Test Unsuccessful case
+        StudentManager.delete(student);
+        
+        errorThrown = false;
+        try { StudentManager.delete(student); } 
+        catch (Exception e) { if(e.getClass().equals(NoSuchRecordException.class)) errorThrown = true; }
+        assertTrue(errorThrown);
+    }
+    
+    
+}
